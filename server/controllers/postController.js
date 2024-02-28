@@ -7,18 +7,18 @@ export const createPost = async (req, res) => {
     if (!postedBy || !text)
       return res
         .status(400)
-        .json({ message: "PostedBy and text fields are required" });
+        .json({ error: "PostedBy and text fields are required" });
 
     const user = await User.findById(postedBy);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!user) return res.status(404).json({ error: "User not found" });
     if (user._id.toString() !== req.user._id.toString())
-      return res.status(401).json({ message: "Unauthorized " });
+      return res.status(401).json({ error: "Unauthorized " });
 
     const maxLength = 400;
     if (text.length > maxLength)
       return res
         .status(400)
-        .json({ message: `Text must be less than ${maxLength} characters` });
+        .json({ error: `Text must be less than ${maxLength} characters` });
 
     const newPost = await Post.create({
       postedBy,
@@ -28,7 +28,7 @@ export const createPost = async (req, res) => {
     if (newPost) {
       res.status(201).json(newPost);
     } else {
-      res.status(400).json({ message: "Invalid post data received" });
+      res.status(400).json({ error: "Invalid post data received" });
     }
   } catch (err) {
     console.error("Error in creating post : ", err.message);
@@ -42,7 +42,7 @@ export const getPost = async (req, res) => {
     if (post) {
       res.status(200).json(post);
     } else {
-      res.status(404).json({ message: "Post not found" });
+      res.status(404).json({ error: "Post not found" });
     }
   } catch (err) {
     console.error("Error in getting post : ", err.message);
@@ -154,10 +154,10 @@ export const deletePost = async (req, res) => {
         await Post.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: "Post deleted successfully" });
       } else {
-        res.status(401).json({ message: "Unauthorized" });
+        res.status(401).json({ error: "Unauthorized" });
       }
     } else {
-      res.status(404).json({ message: "Post not found" });
+      res.status(404).json({ error: "Post not found" });
     }
   } catch (err) {
     console.error("Error in deleting post : ", err.message);

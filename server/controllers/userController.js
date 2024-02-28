@@ -7,7 +7,7 @@ export const signUpUser = async (req, res) => {
     const { name, email, username, password } = req.body;
     const user = await User.findOne({ $or: [{ email }, { username }] });
     if (user) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ error: "User already exists" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({
@@ -25,7 +25,7 @@ export const signUpUser = async (req, res) => {
         username: newUser.username,
       });
     } else {
-      res.status(400).json({ message: "Invalid user data received" });
+      res.status(400).json({ error: "Invalid user data received" });
     }
   } catch (err) {
     console.error("Error in sign up: ", err.message);
@@ -46,7 +46,7 @@ export const loginUser = async (req, res) => {
         username: user.username,
       });
     } else {
-      res.status(400).json({ message: "Invalid credentials" });
+      res.status(400).json({ error: "Invalid credentials" });
     }
   } catch (err) {
     console.error("Error in login : ", err.message);
@@ -71,10 +71,10 @@ export const followUnFollowUser = async (req, res) => {
     const currentUser = await User.findById(req.user._id);
 
     if (id === req.user._id.toString())
-      return res.json(400).json({ message: "You can't follow yourself" });
+      return res.json(400).json({ error: "You can't follow yourself" });
 
     if (!userToModify || !currentUser) {
-      return res.status(400).json({ message: "User not found" });
+      return res.status(400).json({ error: "User not found" });
     }
 
     if (!userToModify.followers.includes(req.user._id)) {
@@ -96,12 +96,12 @@ export const updateUser = async (req, res) => {
   let { name, email, username, password, bio, profilePic } = req.body;
   try {
     const user = await User.findById(req.user._id);
-    if (!user) return res.status(400).json({ message: "User not found" });
+    if (!user) return res.status(400).json({ error: "User not found" });
 
     if (req.params.id !== req.user._id.toString()) {
       return res
         .status(403)
-        .json({ message: "Cannot update other user's profile" });
+        .json({ error: "Cannot update other user's profile" });
     }
 
     if (password) {
@@ -129,7 +129,7 @@ export const getUserProfile = async (req, res) => {
     const user = await User.findOne({ username })
       .select("-password")
       .select("-updatedAt");
-    if (!user) return res.status(400).json({ message: "User not found" });
+    if (!user) return res.status(400).json({ error: "User not found" });
     res.status(200).json(user);
   } catch (error) {
     console.error("Error in getting user profile : ", error);
