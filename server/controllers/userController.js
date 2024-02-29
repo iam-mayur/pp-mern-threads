@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import setTokenAndCookie from "../util/setTokenAndCookie.js";
+import { v2 as cloudinary } from "cloudinary";
 
 export const signUpUser = async (req, res) => {
   try {
@@ -23,6 +24,8 @@ export const signUpUser = async (req, res) => {
         name: newUser.name,
         email: newUser.email,
         username: newUser.username,
+        bio: newUser.bio,
+        profilePic: newUser.profilePic,
       });
     } else {
       res.status(400).json({ error: "Invalid user data received" });
@@ -44,6 +47,8 @@ export const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         username: user.username,
+        bio: user.bio,
+        profilePic: user.profilePic,
       });
     } else {
       res.status(400).json({ error: "Invalid credentials" });
@@ -93,7 +98,8 @@ export const followUnFollowUser = async (req, res) => {
 };
 
 export const updateUser = async (req, res) => {
-  let { name, email, username, password, bio, profilePic } = req.body;
+  const { name, email, username, password, bio } = req.body;
+  let { profilePic } = req.body;
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(400).json({ error: "User not found" });
@@ -108,6 +114,19 @@ export const updateUser = async (req, res) => {
       const hashed = await bcrypt.hash(password, 10);
       user.password = hashed;
     }
+
+    if (profilePic) {
+      if (user.profilePic) {
+        await cloudinary.uploader.destroy(
+          user.profilePic.split("/").pop().split(".")[0]
+        );
+      }
+      const result = await cloudinary.uploader.upload(profilePic, {
+        folder: "profile",
+      });
+      user.profilePic = result.secure_url;
+    }
+
     user.name = name || user.name;
     user.email = email || user.email;
     user.username = username || user.username;
