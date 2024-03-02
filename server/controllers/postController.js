@@ -156,16 +156,22 @@ export const replyToPost = async (req, res) => {
 export const deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
-    if (post) {
-      if (post.postedBy.toString() === req.user._id.toString()) {
-        await Post.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: "Post deleted successfully" });
-      } else {
-        res.status(401).json({ error: "Unauthorized" });
-      }
-    } else {
+    if (!post) {
       res.status(404).json({ error: "Post not found" });
     }
+
+    // Check if the user is the author of the post
+    if (post.postedBy.toString() !== req.user._id.toString()) {
+      res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (post.img) {
+      const imgId = post.img.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(imgId);
+    }
+
+    await Post.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: "Post deleted successfully" });
   } catch (err) {
     console.error("Error in deleting post : ", err.message);
     res.status(500).json({ error: err.message });

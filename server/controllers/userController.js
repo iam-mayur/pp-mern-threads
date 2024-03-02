@@ -1,7 +1,9 @@
 import User from "../models/User.js";
+import Post from "../models/Post.js";
 import bcrypt from "bcryptjs";
 import setTokenAndCookie from "../util/setTokenAndCookie.js";
 import { v2 as cloudinary } from "cloudinary";
+import mongoose from "mongoose";
 
 export const signUpUser = async (req, res) => {
   try {
@@ -134,6 +136,17 @@ export const updateUser = async (req, res) => {
     user.profilePic = profilePic || user.profilePic;
     user = await user.save();
 
+    await Post.updateMany(
+      { "replies.userId": req.user._id },
+      {
+        $set: {
+          "replies.$[reply].username": user.username,
+          "replies.$[reply].userProfilePic": user.profilePic,
+        },
+      },
+      { arrayFilters: [{ "reply.userId": req.user._id }] }
+    );
+
     user.password = null; // remove password from response
     res.status(200).json(user);
   } catch (error) {
@@ -143,15 +156,68 @@ export const updateUser = async (req, res) => {
 };
 
 export const getUserProfile = async (req, res) => {
+  // Fetch user profile either with username or userId
+  // query is either username or userId
   try {
-    const { username } = req.params;
-    const user = await User.findOne({ username })
-      .select("-password")
-      .select("-updatedAt");
+    const { query } = req.params;
+    let user;
+    if (mongoose.Types.ObjectId.isValid(query)) {
+      user = await User.findOne({ _id: query })
+        .select("-password")
+        .select("-updatedAt");
+    } else {
+      user = await User.findOne({ username: query })
+        .select("-password")
+        .select("-updatedAt");
+    }
     if (!user) return res.status(400).json({ error: "User not found" });
     res.status(200).json(user);
   } catch (error) {
     console.error("Error in getting user profile : ", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getSuggestedUsers = async (req, res) => {
+  try {
+    // exclude the current user from suggested users array and exclude users that current user is already following
+    const userId = req.user._id;
+    const usersFollowedByYou = await User.findById(userId).select("following");
+    const users = await User.aggregate([
+      {
+        $match: {
+          _id: { $ne: userId },
+        },
+      },
+      {
+        $sample: { size: 10 },
+      },
+    ]);
+    const filteredUsers = users.filter(
+      (user) => !usersFollowedByYou.following.includes(user._id)
+    );
+    const suggestedUsers = filteredUsers.slice(0, 4);
+
+    suggestedUsers.forEach((user) => (user.password = null));
+
+    res.status(200).json(suggestedUsers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const freezeAccount = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(400).json({ error: "User not found" });
+    }
+
+    user.isFrozen = true;
+    await user.save();
+
+    res.status(200).json({ success: true });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
