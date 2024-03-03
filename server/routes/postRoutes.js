@@ -9,7 +9,6 @@ import {
   getFeedPosts,
   getUserPosts,
 } from "../controllers/postController.js";
-import { isAuthenticated } from "../middleware/checkAuth.js";
 const router = express.Router();
 
 router.get("/:id", getPost);

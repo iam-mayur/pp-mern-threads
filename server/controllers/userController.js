@@ -1,5 +1,5 @@
-import User from "../models/User.js";
-import Post from "../models/Post.js";
+import User from "../models/userModel.js";
+import Post from "../models/postModel.js";
 import bcrypt from "bcryptjs";
 import setTokenAndCookie from "../util/setTokenAndCookie.js";
 import { v2 as cloudinary } from "cloudinary";

@@ -4,9 +4,9 @@ import express from "express";
 import Message from "../models/messageModel.js";
 import Conversation from "../models/conversationModel.js";
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
+export const app = express();
+export const server = http.createServer(app);
+export const io = new Server(server, {
   cors: {
     origin: "http://localhost:3000",
     methods: ["GET", "POST"],
@@ -16,7 +16,6 @@ const io = new Server(server, {
 export const getRecipientSocketId = (recipientId) => {
   return userSocketMap[recipientId];
 };
-
 const userSocketMap = {}; // userId: socketId
 
 io.on("connection", (socket) => {
@@ -48,5 +47,3 @@ io.on("connection", (socket) => {
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });
-
-export { io, server, app };

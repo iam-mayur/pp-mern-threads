@@ -1,7 +1,7 @@
-import User from "../models/user.model.js";
+import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 
-export default isAuthenticated = async (req, res, next) => {
+const isAuthenticated = async (req, res, next) => {
   try {
     const token = req.cookies.jwt;
     if (!token) return res.status(401).json({ message: "Unauthorized" });
@@ -14,3 +14,5 @@ export default isAuthenticated = async (req, res, next) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
+export default isAuthenticated;

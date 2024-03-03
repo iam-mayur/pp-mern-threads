@@ -1,5 +1,5 @@
 import express from "express";
-import protectRoute from "../middlewares/protectRoute.js";
+import isAuthenticated from "../middleware/checkAuth.js";
 import {
   getMessages,
   sendMessage,
@@ -8,8 +8,8 @@ import {
 
 const router = express.Router();
 
-router.get("/conversations", protectRoute, getConversations);
-router.get("/:otherUserId", protectRoute, getMessages);
-router.post("/", protectRoute, sendMessage);
+router.get("/conversations", isAuthenticated, getConversations);
+router.get("/:otherUserId", isAuthenticated, getMessages);
+router.post("/", isAuthenticated, sendMessage);
 
 export default router;
