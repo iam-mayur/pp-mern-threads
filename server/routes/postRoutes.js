@@ -11,9 +11,9 @@ import {
 } from "../controllers/postController.js";
 const router = express.Router();
 
+router.get("/feed", isAuthenticated, getFeedPosts);
 router.get("/:id", getPost);
 router.get("/user/:username", getUserPosts);
-router.get("/feed", isAuthenticated, getFeedPosts);
 router.post("/create", isAuthenticated, createPost);
 router.put("/like/:id", isAuthenticated, likeUnlikePost);
 router.put("/reply/:id", isAuthenticated, replyToPost);
